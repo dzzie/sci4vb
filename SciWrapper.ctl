@@ -7,6 +7,7 @@ Begin VB.UserControl SciWrapper
    ForwardFocus    =   -1  'True
    ScaleHeight     =   4800
    ScaleWidth      =   7755
+   ToolboxBitmap   =   "SciWrapper.ctx":0000
 End
 Attribute VB_Name = "SciWrapper"
 Attribute VB_GlobalNameSpace = False
@@ -402,8 +403,6 @@ Private Sub ApplyDefaults()
     ' Set sensible defaults
     SciMsg SCI_SETCODEPAGE, SC_CP_UTF8
     SciMsg SCI_SETEOLMODE, SC_EOL_CRLF
-    SciMsg SCI_SETCARETLINEVISIBLE, 1
-    SciMsg SCI_SETCARETLINEBACK, &HE8E8E8
     SciMsg SCI_SETTABWIDTH, 4
     SciMsg SCI_SETUSETABS, 0  ' Use spaces by default
     
@@ -427,7 +426,7 @@ Private Sub ApplyDefaults()
     Margins.SetSensitive 2, True
     
     ' Visual settings
-    View.CaretLineVisible = True
+    View.CaretLineVisible = False 'this hides our debugger yellow background
     View.CaretLineBack = &HE8E8E8
     View.EdgeMode = edgeLine
     View.EdgeColumn = 80
@@ -520,7 +519,8 @@ Private Sub iSubclass_WndProc(ByVal bBefore As Boolean, bHandled As Boolean, lRe
     On Error Resume Next
     
     Dim word As String
-    
+    Dim wasHandled As Boolean
+
      If uMsg = WM_GETDLGCODE Then
         lReturn = DLGC_WANTALLKEYS Or DLGC_WANTARROWS Or DLGC_WANTTAB
         bHandled = True
@@ -538,10 +538,17 @@ Private Sub iSubclass_WndProc(ByVal bBefore As Boolean, bHandled As Boolean, lRe
         
     ElseIf uMsg = WM_KEYDOWN Then 'happens before WM_CHAR, wasHandled ineffectual cant eat here..
                                            
-        If IsCtrlOnly() Then
-            'copy, paste, cut, selall, undo, redo all handled by scintinilla internally...
-            If wParam = Asc("F") Or wParam = Asc("H") Then frmReplace.LaunchReplaceForm Me
-            If Asc("G") = wParam Then Call ShowGoto
+        RaiseEvent KeyPressed(wParam, GetModifierState(), wasHandled)
+
+        If Not wasHandled Then
+            If IsCtrlOnly() Then
+                If wParam = Asc("F") Or wParam = Asc("H") Then frmReplace.LaunchReplaceForm Me
+                If Asc("G") = wParam Then Call ShowGoto
+            End If
+        Else
+            ' Parent handled it - eat the message
+            bHandled = True
+            lReturn = 0
         End If
                     
     ElseIf uMsg = WM_KEYUP Then
@@ -555,6 +562,8 @@ Private Sub iSubclass_WndProc(ByVal bBefore As Boolean, bHandled As Boolean, lRe
 
     ElseIf uMsg = WM_CHAR Then
 
+        'RaiseEvent CharAdded(wParam) handled in handlenotification from sci, but no special keys like F7 there
+        
         If IsCtrlOnly() Then
         
             'eat these control messages - normal Ctrl A/C/X/Y/Z handled by sci internally
@@ -799,34 +808,28 @@ Public Function GetPreviousBreakpoint(ByVal fromLine As Long) As Long
     GetPreviousBreakpoint = Mark.FindPrevious(fromLine, BREAKPOINT_MASK)
 End Function
 
-Public Function GetBreakpointLines() As Long()
-    ' Return array of all lines with breakpoints
-    Dim lines() As Long
+Public Function GetBreakpointLines() As Collection
+    ' Return collection of all lines with breakpoints
+    Dim c As New Collection
     Dim Count As Long
     Dim line As Long
     Dim maxLine As Long
-    
-    ReDim lines(0)
-    Count = 0
+ 
     line = 0
-    maxLine = UBound(lines) - 1
+    maxLine = lines.Count - 1
     
     Do
         line = Mark.FindNext(line, BREAKPOINT_MASK)
         If line >= 0 And line <= maxLine Then
-            ReDim Preserve lines(Count)
-            lines(Count) = line
-            Count = Count + 1
+            c.Add line
             line = line + 1
         End If
     Loop While line >= 0 And line <= maxLine
     
-    If Count = 0 Then
-        ReDim lines(-1 To -1)  ' Empty array
-    End If
-    
-    GetBreakpointLines = lines
+    Set GetBreakpointLines = c
+
 End Function
+
 
 Private Sub HandleCallTips(ByVal ch As Long)
 

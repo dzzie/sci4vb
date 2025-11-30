@@ -144,6 +144,7 @@ Public Function GetModifierState() As Long
     GetModifierState = modifiers
 End Function
 
+
 ' Check if a specific key is currently pressed
 ' Uses GetAsyncKeyState to check real-time key state
 Public Function IsKeyPressed(ByVal virtualKeyCode As Long) As Boolean
