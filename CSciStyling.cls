@@ -126,8 +126,8 @@ Public Sub Colorise(ByVal startPos As Long, ByVal endPos As Long)
     m_Sci.SciMsg SCI_COLOURISE, startPos, endPos
 End Sub
 
-Public Sub SetKeywords(ByVal keywordSet As Long, ByVal keywords As String)
-    m_Sci.SciMsgStr SCI_SETKEYWORDS, keywordSet, keywords
+Public Sub SetKeywords(ByVal keywordSet As Long, ByVal KEYWORDS As String)
+    m_Sci.SciMsgStr SCI_SETKEYWORDS, keywordSet, KEYWORDS
 End Sub
 
 Public Sub SetProperty(ByVal key As String, ByVal value As String)
@@ -147,7 +147,7 @@ End Function
 '=========================================================================
 ' Style Management
 '=========================================================================
-Public Sub ClearAll()
+Public Sub clearAll()
     m_Sci.SciMsg SCI_STYLECLEARALL
 End Sub
 
@@ -239,8 +239,8 @@ Public Function GetCase(ByVal style As Long) As eStyleCase
     GetCase = m_Sci.SciMsg(SCI_STYLEGETCASE, style)
 End Function
 
-Public Sub SetVisible(ByVal style As Long, ByVal visible As Boolean)
-    m_Sci.SciMsg SCI_STYLESETVISIBLE, style, IIf(visible, 1, 0)
+Public Sub SetVisible(ByVal style As Long, ByVal Visible As Boolean)
+    m_Sci.SciMsg SCI_STYLESETVISIBLE, style, IIf(Visible, 1, 0)
 End Sub
 
 Public Function GetVisible(ByVal style As Long) As Boolean
@@ -340,7 +340,7 @@ Public Function SetLanguage(ByVal language As eLanguage, Optional ByVal addition
             
         Case langNone
             Lexer = lexNull
-            ClearAll
+            clearAll
             SetLanguage = True
             
         Case Else

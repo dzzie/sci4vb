@@ -4,10 +4,13 @@ Attribute VB_Name = "ModHighlighter"
 'License: MIT
 '---------------------------------------------------
 
-Public Declare Function ShellExecute Lib "shell32.dll" Alias "ShellExecuteA" (ByVal hwnd As Long, ByVal lpOperation As String, ByVal lpFile As String, ByVal lpParameters As String, ByVal lpDirectory As String, ByVal nShowCmd As Long) As Long
-
+'NOTE: if a color is off it may be because vb6 ide is truncating it to an int and it requires the high bytes to be 0
+'i had to declare one as  Const CLR_DARK_GREEN As Long = &H008000&
+'we may have to fix more bleh
 
 Option Explicit
+
+Public Declare Function ShellExecute Lib "shell32.dll" Alias "ShellExecuteA" (ByVal hwnd As Long, ByVal lpOperation As String, ByVal lpFile As String, ByVal lpParameters As String, ByVal lpDirectory As String, ByVal nShowCmd As Long) As Long
 
 '=========================================================================
 ' ModHighlighter - Professional syntax highlighting presets for SciWrapper
@@ -36,6 +39,8 @@ Private Const SCE_C_COMMENTDOCKEYWORD = 17
 Private Const SCE_C_COMMENTDOCKEYWORDERROR = 18
 Private Const SCE_C_GLOBALCLASS = 19
 
+Global Const BREAKPOINT_MARKER As Long = 1
+Global Const BREAKPOINT_MASK As Long = 2
 Global Const LANG_US = &H409
 
 Enum shellOpenState
@@ -164,23 +169,38 @@ Public Function SetVBHighlighter(sci As SciWrapper) As Boolean
                               "resume return rset select set stop sub then to true"
     
     ' Color constants for readability (BGR format)
-    Const CLR_WHITE = &HFFFFFF
-    Const CLR_BLACK = &H0
-    Const CLR_DARK_GREEN = &H5500
-    Const CLR_BLUE = &HFF
-    Const CLR_DARK_BLUE = &HA00000
-    Const CLR_PURPLE = &HC01090
-    Const CLR_BROWN = &H8CA0
-    Const CLR_TEAL = &H808000
-    Const CLR_ORANGE = &H8080
-    Const CLR_RED = &HFF0000
-    Const CLR_TAN = &HBD7373
-    Const CLR_LINE_NUM_BACK = &HEFEFF3
+'    Const CLR_WHITE = &HFFFFFF
+'    Const CLR_BLACK = &H0
+'    Const CLR_DARK_GREEN = &H5500
+'    Const CLR_BLUE = &HFF
+'    Const CLR_DARK_BLUE = &HA00000
+'    Const CLR_PURPLE = &HC01090
+'    Const CLR_BROWN = &H8CA0
+'    Const CLR_TEAL = &H808000
+'    Const CLR_ORANGE = &H8080
+'    Const CLR_RED = &HFF0000
+'    Const CLR_TAN = &HBD7373
+'    Const CLR_LINE_NUM_BACK = &HEFEFF3
+
+    Const CLR_WHITE         As Long = &HFFFFFF
+    Const CLR_BLACK         As Long = &H0&
+    
+    Const CLR_DARK_GREEN    As Long = &H5500&        ' Comments
+    Const CLR_BLUE          As Long = &HFF&          ' Brace mismatch / highlights
+    Const CLR_DARK_BLUE     As Long = &HA00000       ' Class/function names
+    Const CLR_PURPLE        As Long = &HC01090       ' Strings
+    Const CLR_BROWN         As Long = &H8CA0&        ' Doc comment keywords
+    Const CLR_TEAL          As Long = &H808000       ' Numbers / operators
+    Const CLR_ORANGE        As Long = &H8080&        ' Preprocessor / misc
+    Const CLR_RED           As Long = &HFF0000       ' Keywords
+    Const CLR_TAN           As Long = &HBD7373       ' Line numbers
+    Const CLR_LINE_NUM_BACK As Long = &HEFEFF3       ' Line number background
+
     
     With sci
         ' Initialize VB lexer
         .style.Lexer = lexVB
-        .style.ClearAll
+        .style.clearAll
         .SciMsg 2090, 5  ' SCI_SETSTYLEBITS = 5
         
         ' Set keyword lists
@@ -200,7 +220,7 @@ Public Function SetVBHighlighter(sci As SciWrapper) As Boolean
         .style.SetUnderline 32, False
         .style.SetVisible 32, True
         .style.SetEOLFilled 32, False
-        .style.ClearAll  ' Propagate default style to all
+        .style.clearAll  ' Propagate default style to all
         
         ' ------------------------------------------------------------------------
         ' SCE_VB_DEFAULT (0) - Default text
@@ -295,47 +315,70 @@ Public Function SetJavaHighlighter(sci As SciWrapper) As Boolean
     
     Dim i As Long
     
-    ' JavaScript/Java Keywords (style 5)
-    Const KEYWORDS = "abstract boolean break byte case catch char class const " & _
-                     "continue debugger default delete do double else enum export " & _
-                     "extends final finally float for function goto if implements " & _
-                     "import in instanceof int interface long native new package " & _
-                     "private protected public return short static super switch " & _
-                     "synchronized this throw throws transient try typeof var void " & _
-                     "volatile while with true false null"
+    Const KEYWORDS = _
+            "break case catch class const continue debugger default delete do else " & _
+            "enum export extends false finally for function if import in instanceof " & _
+            "let new null return super switch this throw true try typeof var void " & _
+            "while with yield await async"
     
-    ' Color constants for readability
-    Const CLR_WHITE = &HFFFFFF
-    Const CLR_BLACK = &H0
-    Const CLR_GRAY = &H808080
-    Const CLR_DARK_GREEN = &H8000
-    Const CLR_DARK_BLUE = &H800000
-    Const CLR_PURPLE = &H800080
-    Const CLR_TEAL = &H808000
-    Const CLR_CYAN = &HC08000
-    Const CLR_LIGHT_CYAN = &HC0FFC0
-    Const CLR_LIGHT_YELLOW = &HE0FFE0
-    Const CLR_LIGHT_PINK = &HE0E0FF
-    Const CLR_LIGHT_BLUE = &HFFC0C0
-    Const CLR_RED = &HFF0000
-    Const CLR_BLUE = &HFF
-    Const CLR_ORANGE = &H5080
-    Const CLR_BROWN = &H7080
-    Const CLR_TAN = &HBD7373
-    Const CLR_LINE_NUM_BACK = &HEFEFF3
+    ' ========================================================================
+    ' Long-safe color constants (NO inline literals!)
+    ' ========================================================================
+    
+    Const CLR_WHITE         As Long = &HFFFFFF
+    Const CLR_BLACK         As Long = &H0&
+    Const CLR_GRAY          As Long = &H808080
+    
+    Const CLR_DARK_GREEN    As Long = &H8000&
+    Const CLR_DARK_BLUE     As Long = &H800000
+    Const CLR_PURPLE        As Long = &H800080
+    Const CLR_TEAL          As Long = &H808000
+    Const CLR_CYAN          As Long = &HC08000
+    Const CLR_LIGHT_CYAN    As Long = &HC0FFC0
+    Const CLR_LIGHT_YELLOW  As Long = &HE0FFE0
+    Const CLR_LIGHT_PINK    As Long = &HE0E0FF
+    Const CLR_LIGHT_BLUE    As Long = &HFFC0C0
+    
+    Const CLR_RED           As Long = &HFF0000
+    Const CLR_BLUE          As Long = &HFF&
+    Const CLR_ORANGE        As Long = &H5080&
+    Const CLR_BROWN         As Long = &H7080&
+    Const CLR_TAN           As Long = &HBD7373
+    Const CLR_LINE_NUM_BACK As Long = &HEFEFF3
+    
+    ' Former inline literal colors
+    Const CLR_COMMENT_LINE      As Long = &H7F00&
+    Const CLR_COMMENT_DOC       As Long = &H555555
+    Const CLR_NUMBER_TEAL       As Long = &H808000        ' same as CLR_TEAL
+    Const CLR_STRING_PURPLE     As Long = &H850080
+    Const CLR_CHAR_PURPLE       As Long = &H850080
+    Const CLR_UUID_CYAN         As Long = &HC08000         ' same as CLR_CYAN
+    Const CLR_PREPROC_ORANGE    As Long = &H8080&
+    Const CLR_OPERATOR_TEAL     As Long = &H808000         ' same as CLR_TEAL
+    Const CLR_STRING_EOL_BACK   As Long = &HFFC1FF
+    Const CLR_VERBATIM_BACK     As Long = &HE0E0E0
+    Const CLR_REGEX_CYAN        As Long = &HC000&
+    Const CLR_REGEX_BACK        As Long = &HE0FFE0
+    Const CLR_WORD2_MAGENTA     As Long = &HA00030
+    Const CLR_COMMENT_DOC_KEY   As Long = &H7080&
+    Const CLR_COMMENT_DOC_ERR   As Long = &HA00000
+    
+    
     
     With sci
         ' Initialize lexer
         .style.Lexer = lexCPP
-        .style.ClearAll
-        .SciMsg 2090, 5  ' SCI_SETSTYLEBITS = 5
+        .style.clearAll
+        .SciMsg 2090, 5                 ' SCI_SETSTYLEBITS = 5
+        .SciSetProperty "lexer.cpp.track.preprocessor", "0"
+        .SciSetProperty "lexer.cpp.allow.dollars", "0"
+        .SciSetProperty "styling.within.preprocessor", "1"
         
         ' Set keyword list
         .style.SetKeywords 0, KEYWORDS
         
         ' ------------------------------------------------------------------------
         ' Configure Default Style (STYLE_DEFAULT = 32)
-        ' All other styles inherit from this unless explicitly overridden
         ' ------------------------------------------------------------------------
         .style.SetFont 32, "Courier New"
         .style.SetSize 32, 11
@@ -346,10 +389,10 @@ Public Function SetJavaHighlighter(sci As SciWrapper) As Boolean
         .style.SetUnderline 32, False
         .style.SetVisible 32, True
         .style.SetEOLFilled 32, False
-        .style.ClearAll  ' Propagate default style to all
+        .style.clearAll  ' Propagate default style to all
         
         ' ------------------------------------------------------------------------
-        ' SCE_C_DEFAULT (0) - Default text
+        ' SCE_C_DEFAULT (0)
         ' ------------------------------------------------------------------------
         .style.SetFore 0, CLR_GRAY
         
@@ -361,111 +404,111 @@ Public Function SetJavaHighlighter(sci As SciWrapper) As Boolean
         ' ------------------------------------------------------------------------
         ' SCE_C_COMMENTLINE (2) - Line comments //
         ' ------------------------------------------------------------------------
-        .style.SetFore 2, &H7F00  ' Dark green-blue
+        .style.SetFore 2, CLR_COMMENT_LINE
         
         ' ------------------------------------------------------------------------
         ' SCE_C_COMMENTDOC (3) - Documentation comments /** ... */
         ' ------------------------------------------------------------------------
-        .style.SetFore 3, &H555555  ' Medium gray
+        .style.SetFore 3, CLR_COMMENT_DOC
         
         ' ------------------------------------------------------------------------
-        ' SCE_C_NUMBER (4) - Numeric literals
+        ' SCE_C_NUMBER (4)
         ' ------------------------------------------------------------------------
-        .style.SetFore 4, &H808000  ' Teal
+        .style.SetFore 4, CLR_NUMBER_TEAL
         
         ' ------------------------------------------------------------------------
-        ' SCE_C_WORD (5) - Keywords (bold dark blue)
+        ' SCE_C_WORD (5) - Keywords
         ' ------------------------------------------------------------------------
         .style.SetFore 5, CLR_DARK_BLUE
         .style.SetBold 5, True
         
         ' ------------------------------------------------------------------------
-        ' SCE_C_STRING (6) - String literals "..." (italic purple)
+        ' SCE_C_STRING (6)
         ' ------------------------------------------------------------------------
-        .style.SetFore 6, &H850080  ' Purple
+        .style.SetFore 6, CLR_STRING_PURPLE
         .style.SetItalic 6, True
         
         ' ------------------------------------------------------------------------
-        ' SCE_C_CHARACTER (7) - Character literals '...' (italic)
+        ' SCE_C_CHARACTER (7)
         ' ------------------------------------------------------------------------
-        .style.SetFore 7, &H7EFFFF  ' Light yellow
+        .style.SetFore 7, CLR_CHAR_PURPLE
         .style.SetItalic 7, True
         
         ' ------------------------------------------------------------------------
-        ' SCE_C_UUID (8) - UUIDs
+        ' SCE_C_UUID (8)
         ' ------------------------------------------------------------------------
-        .style.SetFore 8, &HC08000  ' Light cyan
+        .style.SetFore 8, CLR_UUID_CYAN
         
         ' ------------------------------------------------------------------------
-        ' SCE_C_PREPROCESSOR (9) - Preprocessor directives
+        ' SCE_C_PREPROCESSOR (9)
         ' ------------------------------------------------------------------------
-        .style.SetFore 9, &H8080  ' Orange
+        .style.SetFore 9, CLR_PREPROC_ORANGE
         
         ' ------------------------------------------------------------------------
-        ' SCE_C_OPERATOR (10) - Operators and punctuation
+        ' SCE_C_OPERATOR (10)
         ' ------------------------------------------------------------------------
-        .style.SetFore 10, &H808000  ' Teal
+        .style.SetFore 10, CLR_OPERATOR_TEAL
         
         ' ------------------------------------------------------------------------
-        ' SCE_C_STRINGEOL (12) - Unclosed string at EOL (error state)
+        ' SCE_C_STRINGEOL (12)
         ' ------------------------------------------------------------------------
         .style.SetFore 12, CLR_BLACK
-        .style.SetBack 12, &HFFC1FF  ' Light pink background
+        .style.SetBack 12, CLR_STRING_EOL_BACK
         .style.SetEOLFilled 12, True
         
         ' ------------------------------------------------------------------------
-        ' SCE_C_VERBATIM (13) - Verbatim strings @"..."
+        ' SCE_C_VERBATIM (13)
         ' ------------------------------------------------------------------------
         .style.SetFore 13, CLR_DARK_GREEN
-        .style.SetBack 13, &HE0E0E0  ' Light gray background
+        .style.SetBack 13, CLR_VERBATIM_BACK
         
         ' ------------------------------------------------------------------------
-        ' SCE_C_REGEX (14) - Regular expressions /pattern/
+        ' SCE_C_REGEX (14)
         ' ------------------------------------------------------------------------
-        .style.SetFore 14, &HC000  ' Dark cyan
-        .style.SetBack 14, &HE0FFE0  ' Very light green background
+        .style.SetFore 14, CLR_REGEX_CYAN
+        .style.SetBack 14, CLR_REGEX_BACK
         
         ' ------------------------------------------------------------------------
-        ' SCE_C_COMMENTLINEDOC (15) - Documentation line comments ///
+        ' SCE_C_COMMENTLINEDOC (15)
         ' ------------------------------------------------------------------------
         .style.SetFore 15, CLR_DARK_GREEN
         
         ' ------------------------------------------------------------------------
-        ' SCE_C_WORD2 (16) - Secondary keyword set
+        ' SCE_C_WORD2 (16)
         ' ------------------------------------------------------------------------
-        .style.SetFore 16, &HA00030  ' Dark magenta
+        .style.SetFore 16, CLR_WORD2_MAGENTA
         
         ' ------------------------------------------------------------------------
-        ' SCE_C_COMMENTDOCKEYWORD (17) - Keywords in doc comments
+        ' SCE_C_COMMENTDOCKEYWORD (17)
         ' ------------------------------------------------------------------------
-        .style.SetFore 17, &H7080  ' Brown
+        .style.SetFore 17, CLR_COMMENT_DOC_KEY
         
         ' ------------------------------------------------------------------------
-        ' SCE_C_COMMENTDOCKEYWORDERROR (18) - Unrecognized doc keywords
+        ' SCE_C_COMMENTDOCKEYWORDERROR (18)
         ' ------------------------------------------------------------------------
-        .style.SetFore 18, &HA00000  ' Dark red
+        .style.SetFore 18, CLR_COMMENT_DOC_ERR
         
         ' ------------------------------------------------------------------------
-        ' STYLE_LINENUMBER (33) - Line number margin
+        ' STYLE_LINENUMBER (33)
         ' ------------------------------------------------------------------------
         .style.SetFore 33, CLR_TAN
         .style.SetBack 33, CLR_LINE_NUM_BACK
         
         ' ------------------------------------------------------------------------
-        ' STYLE_BRACELIGHT (34) - Matching brace highlight
+        ' STYLE_BRACELIGHT (34)
         ' ------------------------------------------------------------------------
         .style.SetFore 34, CLR_RED
         .style.SetBack 34, CLR_WHITE
         .style.SetBold 34, True
         
         ' ------------------------------------------------------------------------
-        ' STYLE_BRACEBAD (35) - Unmatched brace highlight
+        ' STYLE_BRACEBAD (35)
         ' ------------------------------------------------------------------------
         .style.SetFore 35, CLR_BLUE
         .style.SetBack 35, CLR_WHITE
         .style.SetBold 35, True
         
-        ' Apply syntax highlighting to entire document
+        ' Apply syntax highlighting
         .style.Colorise 0, -1
     End With
     
@@ -475,6 +518,7 @@ Public Function SetJavaHighlighter(sci As SciWrapper) As Boolean
 ErrorHandler:
     SetJavaHighlighter = False
 End Function
+
 
 
 Public Function SetSqlHighlighter(sci As SciWrapper) As Boolean
@@ -510,7 +554,7 @@ Public Function SetSqlHighlighter(sci As SciWrapper) As Boolean
     With sci
         ' Initialize SQL lexer
         .style.Lexer = lexSQL
-        .style.ClearAll
+        .style.clearAll
         .SciMsg 2090, 5  ' SCI_SETSTYLEBITS = 5
         
         ' Set SQL keyword list
@@ -529,7 +573,7 @@ Public Function SetSqlHighlighter(sci As SciWrapper) As Boolean
         .style.SetUnderline 32, False
         .style.SetVisible 32, True
         .style.SetEOLFilled 32, False
-        .style.ClearAll  ' Propagate default style to all
+        .style.clearAll  ' Propagate default style to all
         
         ' ------------------------------------------------------------------------
         ' SCE_SQL_DEFAULT (0) - Default text
@@ -618,14 +662,14 @@ Public Sub SetVBPCodeHighlighter(sci As SciWrapper, Optional additionalKeywords 
     
     ' Set CPP lexer for C-style syntax
     sci.style.Lexer = lexCPP
-    sci.style.ClearAll
+    sci.style.clearAll
     
     ' Configure base font
     sci.style.SetFont 32, "Courier New"
     sci.style.SetSize 32, 10
     sci.style.SetBack 32, &HFFFFFF
     sci.style.SetFore 32, &H0
-    sci.style.ClearAll
+    sci.style.clearAll
     
     ' Function call opcodes (keywords set 0)
     callOpcodes = "CallI2 CallI4 CallR4 CallR8 CallCy CallVar CallStr CallBool CallDate " & _
@@ -698,22 +742,38 @@ Public Function SetPythonHighlighter(sci As SciWrapper) As Boolean
                            "pass print raise return try while with yield True False None"
     
     ' Color constants (BGR format)
-    Const CLR_WHITE = &HFFFFFF
-    Const CLR_BLACK = &H0
-    Const CLR_DARK_GREEN = &H8000       ' Comments
-    Const CLR_DARK_CYAN = &H808000      ' Numbers
-    Const CLR_PURPLE = &H800080         ' Strings
-    Const CLR_GRAY = &H808080           ' Triple-quoted strings/docstrings
-    Const CLR_RED = &HFF0000            ' Keywords
-    Const CLR_DARK_BLUE = &H800000      ' Function/class names
-    Const CLR_BLUE = &HFF               ' Brace mismatch
-    Const CLR_TAN = &HBD7373            ' Line numbers
-    Const CLR_LINE_NUM_BACK = &HEFEFF3
+'    Const CLR_WHITE = &HFFFFFF
+'    Const CLR_BLACK = &H0
+'    Const CLR_DARK_GREEN = &H8000       ' Comments
+'    Const CLR_DARK_CYAN = &H808000      ' Numbers
+'    Const CLR_PURPLE = &H800080         ' Strings
+'    Const CLR_GRAY = &H808080           ' Triple-quoted strings/docstrings
+'    Const CLR_RED = &HFF0000            ' Keywords
+'    Const CLR_DARK_BLUE = &H800000      ' Function/class names
+'    Const CLR_BLUE = &HFF               ' Brace mismatch
+'    Const CLR_TAN = &HBD7373            ' Line numbers
+'    Const CLR_LINE_NUM_BACK = &HEFEFF3
+
+    Const CLR_WHITE         As Long = &HFFFFFF
+    Const CLR_BLACK         As Long = &H0&
+    
+    Const CLR_DARK_GREEN    As Long = &H8000&       ' Comments
+    Const CLR_DARK_CYAN     As Long = &H808000      ' Numbers
+    Const CLR_PURPLE        As Long = &H800080      ' Strings
+    Const CLR_GRAY          As Long = &H808080      ' Triple-quoted/docstrings
+    
+    Const CLR_RED           As Long = &HFF0000       ' Keywords
+    Const CLR_DARK_BLUE     As Long = &H800000       ' Function/class names
+    Const CLR_BLUE          As Long = &HFF&          ' Brace mismatch
+    
+    Const CLR_TAN           As Long = &HBD7373       ' Line numbers
+    Const CLR_LINE_NUM_BACK As Long = &HEFEFF3       ' Line number background
+
     
     With sci
         ' Initialize Python lexer
         .style.Lexer = lexPython
-        .style.ClearAll
+        .style.clearAll
         
         ' Set Python keyword list
         .style.SetKeywords 0, PYTHON_KEYWORDS
@@ -731,7 +791,7 @@ Public Function SetPythonHighlighter(sci As SciWrapper) As Boolean
         .style.SetUnderline 32, False
         .style.SetVisible 32, True
         .style.SetEOLFilled 32, False
-        .style.ClearAll  ' Propagate default style to all
+        .style.clearAll  ' Propagate default style to all
         
         ' ------------------------------------------------------------------------
         ' SCE_P_DEFAULT (0) - Default text
@@ -844,14 +904,14 @@ Public Function SetHTMLHighlighter(sci As SciWrapper) As Boolean
     On Error GoTo ErrorHandler
     
     sci.style.Lexer = lexHTML
-    sci.style.ClearAll
+    sci.style.clearAll
     
     sci.SciMsg 2090, 7  ' SCI_SETSTYLEBITS = 7 for HTML
     
     sci.style.SetFont 32, "Consolas"
     sci.style.SetSize 32, 10
     sci.style.SetBack 32, &HFFFFFF
-    sci.style.ClearAll
+    sci.style.clearAll
     
     ' HTML styles
     sci.style.SetFore 1, &H8000        ' Tag - green
@@ -916,7 +976,7 @@ Public Sub ApplyDarkTheme(sci As SciWrapper)
         .style.SetFore 32, &HE0E0E0   ' Light gray text
         .style.SetFont 32, "Consolas"
         .style.SetSize 32, 10
-        .style.ClearAll
+        .style.clearAll
         
         ' Line number margin
         .Margins.SetBack 0, &H2D2D2D

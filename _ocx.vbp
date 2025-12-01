@@ -25,6 +25,7 @@ Class=CIntellisenseManager; CIntellisenseManager.cls
 UserControl=ucFilterList.ctl
 Form=frmObjBrowser.frm
 Form=frmAbout.frm
+Class=CBreakPoint; CBreakPoint.cls
 Startup="(None)"
 HelpFile=""
 Title="Project1"

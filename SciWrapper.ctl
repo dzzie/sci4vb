@@ -46,6 +46,7 @@ Public View As New CSciView
 Public Search As New CSciSearch
 Public Helper As New CSciHelpers
 Public Intellisense As New CIntellisenseManager
+Public breakpoints As New CBreakPoint
 
 '=========================================================================
 ' Events
@@ -194,8 +195,6 @@ Private Const SC_MARK_BACKGROUND = 22
 Private Const SC_CP_UTF8 = 65001
 Private Const SC_CP_DBCS = 1
 
-Private Const BREAKPOINT_MARKER As Long = 1
-Private Const BREAKPOINT_MASK As Long = 2
 Private Const STYLE_DEFAULT As Long = 32
 Private Const STYLE_LINENUMBER As Long = 33
 Private Const STYLE_BRACELIGHT As Long = 34
@@ -243,6 +242,30 @@ End Property
 Public Property Let CallTipsEnabled(ByVal value As Boolean)
     m_CallTipsEnabled = value
 End Property
+
+'not sure i can bear typing that out everytime..
+Property Get bp() As CBreakPoint
+    Set bp = breakpoints
+End Property
+
+'this is only used internally on margin click, not a user api
+Private Sub ToggleBreakpoint(ByVal line As Long)
+    Dim isAdding As Boolean, Cancel As Boolean
+    
+    isAdding = (breakpoints.isSet(line) = False)
+    Cancel = False
+    
+    RaiseEvent UserBreakpointToggle(line, isAdding, Cancel)
+    
+    If Cancel Then Exit Sub  ' Host said no
+    
+    If isAdding Then
+        breakpoints.add line
+    Else
+        breakpoints.remove line
+    End If
+End Sub
+
 '=========================================================================
 ' Core Scintilla Message Interface
 '=========================================================================
@@ -384,6 +407,7 @@ End Sub
 
 Private Sub InitializeModules()
     ' Pass control reference to all feature modules
+    breakpoints.Init Me
     doc.Init Me
     edit.Init Me
     sel.Init Me
@@ -443,7 +467,7 @@ Private Sub ApplyDefaults()
     ' Setup default styling
     style.SetFont 32, "Consolas"  ' STYLE_DEFAULT
     style.SetSize 32, 10
-    style.ClearAll
+    style.clearAll
 
     ' Autocomplete settings
     Autoc.IgnoreCase = True
@@ -466,14 +490,13 @@ Private Sub ApplyDefaults()
     doc.Folding = False
     doc.LineNumbers = True
     doc.ReadOnly = False
-    doc.BreakPoints = False
-    
+ 
     With Mark
         .Define 2, SC_MARK_ARROW
         .SetFore 2, vbBlack  'current eip
         .SetBack 2, vbYellow
     
-        ' Setup margin 1 for breakpoints
+        ' Setup margin 1 for breakpoints (shown by default)
         Margins.SetType 1, marginSymbol
         Margins.SetWidth 1, 16
         Margins.SetSensitive 1, True
@@ -690,29 +713,7 @@ Private Sub HandleNotification(ByVal lParam As Long)
     End Select
     
 End Sub
-
-'=========================================================================
-' Breakpoint Management
-'=========================================================================
-
-Private Sub ToggleBreakpoint(ByVal line As Long)
-    Dim markers As Long, isAdding As Boolean, Cancel As Boolean
-    
-    markers = Mark.GetMarkers(line)
-    isAdding = ((markers And BREAKPOINT_MASK) = 0)
-    Cancel = False
-    
-    RaiseEvent UserBreakpointToggle(line, isAdding, Cancel)
-    
-    If Cancel Then Exit Sub  ' Host said no
-    
-    If isAdding Then
-        Mark.Add line, BREAKPOINT_MARKER
-    Else
-        Mark.Delete line, BREAKPOINT_MARKER
-    End If
-End Sub
-
+ 
 Private Sub HandleIntellisense(ch As Long)
 
     Dim currentWord As String
@@ -777,59 +778,6 @@ Private Sub HandleIntellisense(ch As Long)
     End If
     
 End Sub
- 
-
-'=========================================================================
-' Public Breakpoint API
-'=========================================================================
-Public Sub AddBreakpoint(ByVal line As Long)
-    Mark.Add line, BREAKPOINT_MARKER
-End Sub
-
-Public Sub RemoveBreakpoint(ByVal line As Long)
-    Mark.Delete line, BREAKPOINT_MARKER
-End Sub
-
-Public Sub ClearAllBreakpoints()
-    Mark.DeleteAll BREAKPOINT_MARKER
-End Sub
-
-Public Function HasBreakpoint(ByVal line As Long) As Boolean
-    Dim markers As Long
-    markers = Mark.GetMarkers(line)
-    HasBreakpoint = ((markers And BREAKPOINT_MASK) <> 0)
-End Function
-
-Public Function GetNextBreakpoint(ByVal fromLine As Long) As Long
-    GetNextBreakpoint = Mark.FindNext(fromLine, BREAKPOINT_MASK)
-End Function
-
-Public Function GetPreviousBreakpoint(ByVal fromLine As Long) As Long
-    GetPreviousBreakpoint = Mark.FindPrevious(fromLine, BREAKPOINT_MASK)
-End Function
-
-Public Function GetBreakpointLines() As Collection
-    ' Return collection of all lines with breakpoints
-    Dim c As New Collection
-    Dim Count As Long
-    Dim line As Long
-    Dim maxLine As Long
- 
-    line = 0
-    maxLine = lines.Count - 1
-    
-    Do
-        line = Mark.FindNext(line, BREAKPOINT_MASK)
-        If line >= 0 And line <= maxLine Then
-            c.Add line
-            line = line + 1
-        End If
-    Loop While line >= 0 And line <= maxLine
-    
-    Set GetBreakpointLines = c
-
-End Function
-
 
 Private Sub HandleCallTips(ByVal ch As Long)
 

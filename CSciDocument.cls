@@ -75,14 +75,6 @@ Property Let LineNumbers(show As Boolean)
     End If
 End Property
 
-Property Let BreakPoints(show As Boolean)
-    If show Then
-        m_Sci.Margins.ShowBreakpointMargin
-    Else
-        m_Sci.Margins.HideBreakpointMargin
-    End If
-End Property
-
 Property Let MouseDwellTime(ms As Long)
     m_Sci.SciMsg 2264, ms, 0
 End Property
@@ -125,8 +117,8 @@ Sub SetExecLine(ByVal curLine As Long, Optional isActive As Boolean = True, Opti
                 .style.Colorise startPos, endPos
             End If
         
-            .Mark.Add curLine, 2
-            .Mark.Add curLine, 3
+            .Mark.add curLine, 2
+            .Mark.add curLine, 3
         Else
             .Mark.Delete curLine, 2
             .Mark.Delete curLine, 3
