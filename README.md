@@ -414,7 +414,8 @@ This is a clean room implementation created from Scintilla documentation. The Sc
 
 - Scintilla Editor: Neil Hodgson (https://www.scintilla.org/)
 - Subclassing Implementation: Paul Caton
-- Wrapper Architecture: David Zimmer + Claude.ai
+- Wrapper Architecture: David Zimmer 
+- AI: Claude.ai
 
 ## Support
 

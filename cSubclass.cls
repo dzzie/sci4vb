@@ -11,6 +11,10 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
+'Author:  David Zimmer <dzzie@yahoo.com>
+'AI:      Claude.ai
+'Site:    http://sandsprite.com
+'License: MIT
 '*************************************************************************************************
 '* cSubclass - Subclassing class. Use either the implemented interface class, iSubclass, or the
 '*             supplied type library.
@@ -320,7 +324,7 @@ Public Function Subclass(ByVal lng_hWnd As Long, ByVal oOwner As iSubclass) As B
   RtlMoveMemory nAddr, VarPtr(z_Code(0)), CODE_LEN                          'Copy the machine-code to the allocated memory
 
   On Error GoTo Catch                                                       'Catch double subclassing
-    z_hWnds.Add nAddr, "h" & lng_hWnd                                       'Add the hWnd/thunk-address to the collection
+    z_hWnds.add nAddr, "h" & lng_hWnd                                       'Add the hWnd/thunk-address to the collection
   On Error GoTo 0
 
   zMap nAddr                                                                'Map z_Data() to the subclass thunk machine-code
@@ -373,7 +377,7 @@ Public Sub Unsubclass(ByVal lng_hWnd As Long)
     z_Data(IDX_SHUTDOWN) = -1                                               'Set the thunk shutdown flag
     CallWindowProcA nAddr + WNDPROC_OFF, 0, 0, 0, 0                         'Ensures that Unsubclassing from a Form/UserControl's _Terminate event will cause the thunk to release itself
     zMap z_DataOrigData                                                     'Restore z_Data()'s original data pointer
-    .Remove sKey                                                            'Remove the specified window handle from the collection
+    .remove sKey                                                            'Remove the specified window handle from the collection
   End With
   
   Exit Sub

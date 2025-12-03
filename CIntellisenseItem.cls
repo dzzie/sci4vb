@@ -11,7 +11,8 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
-'Author:  David Zimmer <dzzie@yahoo.com> + Claude.ai
+'Author:  David Zimmer <dzzie@yahoo.com>
+'AI:      Claude.ai
 'Site:    http://sandsprite.com
 'License: MIT
 '---------------------------------------------------
@@ -59,8 +60,8 @@ Public Sub AddRawLine(methodName As String, ByVal rawline As String)
     On Error Resume Next
     rawline = Trim(rawline)
     If Len(rawline) = 0 Then Exit Sub
-    m_rawLine.Remove methodName
-    m_rawLine.Add rawline, methodName
+    m_rawLine.remove methodName
+    m_rawLine.add rawline, methodName
 End Sub
 
 Public Function GetRawLine(ByVal methodName As String, Optional withComment As Boolean = False) As String
@@ -80,8 +81,8 @@ Public Sub AddComment(methodName As String, ByVal comment As String)
     On Error Resume Next
     comment = Trim(comment)
     If Len(comment) = 0 Then Exit Sub
-    m_Comments.Remove methodName
-    m_Comments.Add comment, methodName
+    m_Comments.remove methodName
+    m_Comments.add comment, methodName
 End Sub
 
 Public Function GetComment(ByVal methodName As String) As String
@@ -130,7 +131,7 @@ End Function
 '=========================================================================
 Public Sub AddCallTip(methodName As String, signature As String)
     On Error Resume Next
-    m_CallTips.Add signature, methodName
+    m_CallTips.add signature, methodName
 End Sub
 
 '=========================================================================

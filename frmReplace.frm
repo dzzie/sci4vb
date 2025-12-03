@@ -189,7 +189,8 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-'Author:  David Zimmer <dzzie@yahoo.com> + Claude.ai
+'Author:  David Zimmer <dzzie@yahoo.com>
+'AI:      Claude.ai
 'Site:    http://sandsprite.com
 'License: MIT
 '---------------------------------------------------
@@ -219,7 +220,7 @@ Public Sub LaunchReplaceForm(txtObj As SciWrapper)
         Text1 = txtObj.sel.GetSelectedText()
     End If
     
-    cmdFindAll.visible = True
+    cmdFindAll.Visible = True
     Me.show
     If Not Init Then Form_Load
     Form_Resize

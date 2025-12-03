@@ -11,7 +11,8 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
-'Author:  David Zimmer <dzzie@yahoo.com> + Claude.ai
+'Author:  David Zimmer <dzzie@yahoo.com>
+'AI:      Claude.ai
 'Site:    http://sandsprite.com
 'License: MIT
 '---------------------------------------------------
@@ -134,8 +135,8 @@ Public Sub SetBack(ByVal marker As Long, ByVal color As Long)
     m_Sci.SciMsg SCI_MARKERSETBACK, marker, color
 End Sub
 
-Public Function Add(ByVal line As Long, ByVal marker As Long) As Long
-    Add = m_Sci.SciMsg(SCI_MARKERADD, line, marker)
+Public Function add(ByVal line As Long, ByVal marker As Long) As Long
+    add = m_Sci.SciMsg(SCI_MARKERADD, line, marker)
 End Function
 
 Public Sub Delete(ByVal line As Long, ByVal marker As Long)

@@ -11,7 +11,8 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
-'Author:  David Zimmer <dzzie@yahoo.com> + Claude.ai
+'Author:  David Zimmer <dzzie@yahoo.com>
+'AI:      Claude.ai
 'Site:    http://sandsprite.com
 'License: MIT
 '---------------------------------------------------
@@ -59,7 +60,7 @@ End Function
 '=========================================================================
 ' Add an intellisense object
 '=========================================================================
-Public Sub Add(objName As String, methodList As String, Optional desc As String = "")
+Public Sub add(objName As String, methodList As String, Optional desc As String = "")
     Dim Item As New CIntellisenseItem
     
     Item.objName = objName
@@ -69,10 +70,10 @@ Public Sub Add(objName As String, methodList As String, Optional desc As String 
     
     ' Add or replace
     On Error Resume Next
-    m_Objects.Remove objName
+    m_Objects.remove objName
     On Error GoTo 0
     
-    m_Objects.Add Item, objName
+    m_Objects.add Item, objName
 End Sub
 
 Friend Property Get Objects() As Collection
@@ -141,10 +142,10 @@ Public Function LoadCallTips(fileName As String) As Boolean
                 
                 ' Add to call tips
                 On Error Resume Next
-                m_CallTips.Remove funcName
+                m_CallTips.remove funcName
                 On Error GoTo ErrorHandler
                 
-                m_CallTips.Add line, funcName
+                m_CallTips.add line, funcName
                 'If funcName = "addAddr" Then Stop
             End If
         End If
@@ -455,9 +456,9 @@ Public Function ParseFromFile(filePath As String) As Boolean
 
             ' Also add to global tips for backward compat
             On Error Resume Next
-            m_CallTips.Remove methodName
+            m_CallTips.remove methodName
             On Error GoTo ErrorHandler
-            m_CallTips.Add calltip, methodName
+            m_CallTips.add calltip, methodName
             
         End If
          
@@ -476,10 +477,10 @@ NextLine:
         
         ' Add or replace in collection
         On Error Resume Next
-        m_Objects.Remove objName
+        m_Objects.remove objName
         On Error GoTo 0
         
-        m_Objects.Add Item, objName
+        m_Objects.add Item, objName
         ParseFromFile = True
     End If
     

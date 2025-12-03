@@ -11,7 +11,8 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
-'Author:  David Zimmer <dzzie@yahoo.com> + Claude.ai
+'Author:  David Zimmer <dzzie@yahoo.com>
+'AI:      Claude.ai
 'Site:    http://sandsprite.com
 'License: MIT
 '---------------------------------------------------
@@ -188,8 +189,8 @@ Public Property Get CaretLineVisible() As Boolean
     CaretLineVisible = (m_Sci.SciMsg(SCI_GETCARETLINEVISIBLE) <> 0)
 End Property
 
-Public Property Let CaretLineVisible(ByVal visible As Boolean)
-    m_Sci.SciMsg SCI_SETCARETLINEVISIBLE, IIf(visible, 1, 0)
+Public Property Let CaretLineVisible(ByVal Visible As Boolean)
+    m_Sci.SciMsg SCI_SETCARETLINEVISIBLE, IIf(Visible, 1, 0)
 End Property
 
 Public Property Get CaretLineBack() As Long
@@ -320,14 +321,14 @@ Public Property Get HScrollBar() As Boolean
     HScrollBar = (m_Sci.SciMsg(SCI_GETHSCROLLBAR) <> 0)
 End Property
 
-Public Property Let HScrollBar(ByVal visible As Boolean)
-    m_Sci.SciMsg SCI_SETHSCROLLBAR, IIf(visible, 1, 0)
+Public Property Let HScrollBar(ByVal Visible As Boolean)
+    m_Sci.SciMsg SCI_SETHSCROLLBAR, IIf(Visible, 1, 0)
 End Property
 
 Public Property Get VScrollBar() As Boolean
     VScrollBar = (m_Sci.SciMsg(SCI_GETVSCROLLBAR) <> 0)
 End Property
 
-Public Property Let VScrollBar(ByVal visible As Boolean)
-    m_Sci.SciMsg SCI_SETVSCROLLBAR, IIf(visible, 1, 0)
+Public Property Let VScrollBar(ByVal Visible As Boolean)
+    m_Sci.SciMsg SCI_SETVSCROLLBAR, IIf(Visible, 1, 0)
 End Property

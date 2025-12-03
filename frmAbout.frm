@@ -2,14 +2,14 @@ VERSION 5.00
 Begin VB.Form frmAbout 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "About sci4vb"
-   ClientHeight    =   3735
+   ClientHeight    =   3780
    ClientLeft      =   45
    ClientTop       =   390
    ClientWidth     =   8040
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   3735
+   ScaleHeight     =   3780
    ScaleWidth      =   8040
    StartUpPosition =   2  'CenterScreen
    Begin VB.TextBox txtDesc 
@@ -27,7 +27,7 @@ Begin VB.Form frmAbout
       Left            =   0
       Locked          =   -1  'True
       MultiLine       =   -1  'True
-      ScrollBars      =   2  'Vertical
+      ScrollBars      =   3  'Both
       TabIndex        =   1
       Top             =   0
       Width           =   7965
@@ -42,7 +42,7 @@ Begin VB.Form frmAbout
       Width           =   975
    End
    Begin VB.Label lblURL 
-      Caption         =   "https://scintilla.org/"
+      Caption         =   "https://scintilla.org"
       BeginProperty Font 
          Name            =   "Courier"
          Size            =   9.75
@@ -53,13 +53,13 @@ Begin VB.Form frmAbout
          Strikethrough   =   0   'False
       EndProperty
       ForeColor       =   &H00FF0000&
-      Height          =   240
+      Height          =   300
       Index           =   1
       Left            =   60
       MousePointer    =   14  'Arrow and Question
       TabIndex        =   3
       Top             =   3420
-      Width           =   4335
+      Width           =   5115
    End
    Begin VB.Label lblURL 
       Caption         =   "https://sandsprite.com"
@@ -87,6 +87,10 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+'Author:  David Zimmer <dzzie@yahoo.com>
+'AI:      Claude.ai
+'Site:    http://sandsprite.com
+'License: MIT
  
 Private Declare Function GetModuleFileName Lib "kernel32" Alias "GetModuleFileNameA" (ByVal hModule As Long, ByVal lpFileName As String, ByVal nSize As Long) As Long
 Private Declare Function GetModuleHandle Lib "kernel32" Alias "GetModuleHandleA" (ByVal lpModuleName As String) As Long
@@ -109,9 +113,9 @@ Public Function LaunchForm(owner As SciWrapper)
             "Scintilla is an excellent open source component which supports " & vbCrLf & _
             "syntax highlighting, folding, auto complete, code tips, and more." & vbCrLf & _
             vbCrLf & _
-            "sci4vb was created by David Zimmer and claude.ai"
+            "sci4vb was created by David Zimmer with the help of claude.ai"
         
-     Me.visible = True
+     Me.Visible = True
      
 End Function
  
@@ -130,22 +134,62 @@ Public Function CompileVersionInfo(owner As SciWrapper) As String
     Dim hlNames As String
     Dim i As Long
     
-    push ret, pad("sci4vb:", 13) & App.Major & "." & App.Minor & "." & App.Revision & "  (" & FileSize(App.path & "\sci4vb.ocx") & ")"
+    dllPath = App.path & "\sci4vb.ocx"
+    push ret, pad("sci4vb:", 10) & dllPath & _
+              " - " & App.Major & "." & App.Minor & "." & App.Revision & _
+              " - " & FileSize(dllPath) & _
+              " - " & GetCompileTime(dllPath)
     
     dllPath = GetLoadedSciLexerPath()
     If FileExists(dllPath) Then
         dllVer = GetFileVersion(dllPath)
-        If Len(dllVer) > 0 Then push ret, pad("Lexer:", 13) & dllVer & "    (" & FileSize(dllPath) & ")"
-        push ret, "sci4vb Path: " & App.path
-        push ret, "Lexer Path:  " & dllPath
-        
+        push ret, pad("Lexer:", 10) & dllPath & _
+                  " - " & dllVer & " - " & FileSize(dllPath) & _
+                  " - " & GetCompileTime(dllPath)
     Else
-        push ret, "sci4vb Path: " & App.path
         push ret, "SciLexer.dll: NOT FOUND!"
     End If
     
     CompileVersionInfo = Join(ret, vbCrLf)
     
+End Function
+
+Function GetCompileTime(Optional ByVal exe As String) As String
+    
+    Dim f As Long, i As Integer
+    Dim stamp As Long, e_lfanew As Long
+    Dim base As Date, compiled As Date
+
+    On Error GoTo errExit
+    
+    If Len(exe) = 0 Then
+        exe = App.path & "" & App.EXEName & ".exe"
+    End If
+    
+    FileLen exe 'throw error if not exist
+    
+    f = FreeFile
+    Open exe For Binary Access Read As f
+    Get f, , i
+    
+    If i <> &H5A4D Then GoTo errExit 'MZ check
+     
+    Get f, 60 + 1, e_lfanew
+    Get f, e_lfanew + 1, i
+    
+    If i <> &H4550 Then GoTo errExit 'PE check
+    
+    Get f, e_lfanew + 9, stamp
+    Close f
+    
+    base = DateSerial(1970, 1, 1)
+    compiled = DateAdd("s", stamp, base)
+    GetCompileTime = Format(compiled, "mm.dd.yy") '"ddd, mmm d yyyy, h:nn:ss ")
+    
+    Exit Function
+errExit:
+    Close f
+        
 End Function
 
 Public Function GetLoadedSciLexerPath() As String

@@ -115,6 +115,10 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+'Author:  David Zimmer <dzzie@yahoo.com>
+'AI:      Claude.ai
+'Site:    http://sandsprite.com
+'License: MIT
 Option Explicit
 
 Public isense As Collection 'of CIntellisenseItem
@@ -131,19 +135,19 @@ Sub Init(isen As Collection)
     Set isense = isen
     
     For Each ii In isense
-        Set li = lvClasses.ListItems.Add(, , " " & ii.objName, , "class")
+        Set li = lvClasses.ListItems.add(, , " " & ii.objName, , "class")
         Set li.Tag = ii
     Next
     
     txtDescription = "Right click on class list for menu"
     lvClasses.ColumnHeaders(1).Width = lvClasses.Width
     FormPos Me, True
-    Me.visible = True
+    Me.Visible = True
     
 End Sub
 
 Private Sub Form_Load()
-    mnuPopup.visible = False
+    mnuPopup.Visible = False
     lvMembers.SetColumnHeaders "Members"
     Set lvMembers.mainLV.SmallIcons = ImageList1
     Set lvMembers.filtLV.SmallIcons = ImageList1
@@ -185,7 +189,7 @@ Private Sub lvClasses_ItemClick(ByVal Item As MSComctlLib.ListItem)
             ico = IIf(ii.isProp(methodArr(i)), "prop", "func")
             proto = ii.GetCallTip(methodArr(i))
             If Len(proto) = 0 Then proto = methodArr(i)
-            Set li = lvMembers.ListItems.Add(, , " " & proto, , ico)
+            Set li = lvMembers.ListItems.add(, , " " & proto, , ico)
        Next
        
        If Err.Number <> 0 Then
