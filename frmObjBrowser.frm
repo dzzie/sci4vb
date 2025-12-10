@@ -82,6 +82,7 @@ Begin VB.Form frmObjBrowser
       LabelEdit       =   1
       LabelWrap       =   -1  'True
       HideSelection   =   0   'False
+      FullRowSelect   =   -1  'True
       _Version        =   393217
       SmallIcons      =   "ImageList1"
       ForeColor       =   -2147483640
@@ -124,15 +125,24 @@ Option Explicit
 Public isense As Collection 'of CIntellisenseItem
 Dim selClass As CIntellisenseItem
 
-Sub Init(isen As Collection)
+Sub Init(manager As CIntellisenseManager)
 
     Dim ii As CIntellisenseItem
     Dim li As ListItem
+    Dim isen As Collection
     
     lvClasses.ListItems.Clear
     lvMembers.ListItems.Clear
     
-    Set isense = isen
+    Set isense = manager.m_DocObjectsOnly 'documentation only objects not part of true intellisense
+    
+    For Each ii In isense
+        Set li = lvClasses.ListItems.add(, , " " & ii.objName, , "class")
+        Set li.Tag = ii
+    Next
+    
+    
+    Set isense = manager.Objects
     
     For Each ii In isense
         Set li = lvClasses.ListItems.add(, , " " & ii.objName, , "class")
@@ -192,9 +202,10 @@ Private Sub lvClasses_ItemClick(ByVal Item As MSComctlLib.ListItem)
             Set li = lvMembers.ListItems.add(, , " " & proto, , ico)
        Next
        
-       If Err.Number <> 0 Then
-            txtDescription.text = txtDescription.text & vbCrLf & " (Err: " & Err.Description & ")"
-       End If
+       'happening for items manually added without file backing, probably in getcalltip
+       'If Err.Number <> 0 Then
+       '     txtDescription.text = txtDescription.text & vbCrLf & " (Err: " & Err.Description & ")"
+       'End If
        
 End Sub
 
@@ -214,20 +225,20 @@ Private Sub lvMembers_ItemClick(ByVal Item As MSComctlLib.ListItem)
     txtDescription = txtDescription & selClass.GetComment(Item.text)
 End Sub
  
-'Private Sub mnuOpenFile_Click()
-'    On Error Resume Next
-'    Dim li As ListItem, ii As CIntellisenseItem
-'    Set li = lvClasses.SelectedItem
-'    Set ii = li.Tag
-'    If Len(ii.path) = 0 Then
-'        MsgBox "No file was set for this item", vbInformation
-'        Exit Sub
-'    End If
-'    If fso.FileExists(ii.path) Then
-'        Shell "notepad.exe " & fso.GetShortName(ii.path), vbNormalFocus
-'    End If
-'    If Err.Number <> 0 Then MsgBox Err.Description
-'End Sub
+Private Sub mnuOpenFile_Click()
+    On Error Resume Next
+    Dim li As ListItem, ii As CIntellisenseItem
+    Set li = lvClasses.SelectedItem
+    Set ii = li.Tag
+    If Len(ii.path) = 0 Then
+        MsgBox "No file was set for this item", vbInformation
+        Exit Sub
+    End If
+    If FileExists(ii.path) Then
+        Shell "notepad.exe """ & ii.path & """", vbNormalFocus
+    End If
+    If Err.Number <> 0 Then MsgBox Err.Description
+End Sub
 
 Public Sub lvColumnSort(ListViewControl As Object, Column As Object)
     On Error Resume Next

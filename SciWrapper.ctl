@@ -1017,7 +1017,7 @@ Private Function CountInstances(ByVal word As String) As Long
 End Function
 
 Public Sub ShowObjectBrowser()
-    frmObjBrowser.Init Intellisense.Objects
+    frmObjBrowser.Init Intellisense
     frmObjBrowser.show vbModeless
 End Sub
 

@@ -24,6 +24,8 @@ Attribute VB_Exposed = True
 '=========================================================================
 Option Explicit
 
+Public m_DocObjectsOnly As New Collection
+
 Private m_Objects As Collection        ' CIntellisenseItem objects
 Private m_CallTips As Collection       ' Function name -> call tip
 Private m_CurrentArgIndex As Long      ' Current argument being typed
@@ -415,6 +417,11 @@ Public Function ParseFromFile(filePath As String) As Boolean
         Line Input #fileNum, line
         line = Trim$(Replace(line, vbTab, Empty))
         
+        If LCase(Left(line, 15)) = "#objbrowseronly" Then
+            Item.objBrowserOnly = True
+            GoTo NextLine
+        End If
+        
         ' Skip empty lines and comments
         If Len(line) = 0 Then GoTo NextLine
         If Left$(line, 2) = "/*" Then GoTo NextLine
@@ -477,10 +484,18 @@ NextLine:
         
         ' Add or replace in collection
         On Error Resume Next
-        m_Objects.remove objName
+        If Item.objBrowserOnly Then
+            m_DocObjectsOnly.remove objName
+        Else
+            m_Objects.remove objName
+        End If
         On Error GoTo 0
         
-        m_Objects.add Item, objName
+        If Item.objBrowserOnly Then
+            m_DocObjectsOnly.add Item, objName
+        Else
+            m_Objects.add Item, objName
+        End If
         ParseFromFile = True
     End If
     

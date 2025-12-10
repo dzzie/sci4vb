@@ -28,6 +28,7 @@ Public objName As String           ' Object name (e.g., "ida", "Math")
 Public methods As String           ' Space-separated method list
 Public Description As String       ' Object description
 Public path As String              ' Optional file path
+Public objBrowserOnly As Boolean
 
 Private m_MethodArray() As String  ' Parsed method array
 Private m_CallTips As Collection   ' Method name -> call tip signature
