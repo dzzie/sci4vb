@@ -49,7 +49,23 @@ Private Const SCI_SETSAVEPOINT = 2014
 Private Const SCI_GETMODIFY = 2159
 Private Const SCI_GETCODEPAGE = 2137
 Private Const SC_CP_UTF8 = 65001
+Private Const SCI_SETFOCUS = 2380
+Private Const SCI_GETFOCUS = 2381
 
+Private Declare Function SetFocusEx Lib "user32" Alias "SetFocus" (ByVal hwnd As Long) As Long
+
+Property Get HasFocus() As Boolean
+    HasFocus = (m_Sci.SciMsg(SCI_GETFOCUS, 0, 0) <> 0)
+End Property
+
+Property Let HasFocus(v As Boolean)
+    If v Then SetFocusEx m_Sci.SciHwnd
+    m_Sci.SciMsg SCI_SETFOCUS, IIf(v, 1, 0), 0
+End Property
+
+Sub SetFocus()
+    HasFocus = True
+End Sub
 
 Friend Sub Init(sciCtrl As SciWrapper)
     Set m_Sci = sciCtrl

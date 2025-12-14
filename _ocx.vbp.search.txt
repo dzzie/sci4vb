@@ -1,3 +1,11 @@
+focus
+2380
+setfocus
+SCI_LINEFROMPOSITION
+ShowCallTip
+PositionFromLine
+SCI_WORDENDPOSITION
+2267
 frmobjbrowser.
 + Claude.ai
 langJavaScript

@@ -55,6 +55,14 @@ End Sub
 ' Word Operations
 '=========================================================================
 
+Public Function WordStartPos(pos As Long, Optional onlyWordCharacters As Boolean = True) As Long
+  WordStartPos = m_Sci.SciMsg(SCI_WORDSTARTPOSITION, pos, IIf(onlyWordCharacters, 1, 0))
+End Function
+
+Public Function WordEndPos(pos As Long, Optional onlyWordCharacters As Boolean = True) As Long
+  WordEndPos = m_Sci.SciMsg(SCI_WORDENDPOSITION, pos, IIf(onlyWordCharacters, 1, 0))
+End Function
+
 ' Get the word under the mouse cursor at a specific position
 Public Function WordUnderMouse(ByVal pos As Long, Optional ByVal ignoreWhiteSpace As Boolean = False) As String
     Dim wordStart As Long
